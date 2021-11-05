@@ -5,6 +5,6 @@
 
 #include "clusters.h"
 
-int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning);
+int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz);
 
 #endif //__JUMPS_H__

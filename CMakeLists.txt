@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(bilayer C)
+project(multilayer C)
 
 set(CMAKE_C_STANDARD 11)
 
@@ -21,14 +21,14 @@ endif()
 find_package(GSL REQUIRED)
 include_directories(${GSL_INCLUDE_DIR})
 
-add_executable(bilayer
+add_executable(multilayer
         bonds.c
         bonds.h
         clusters.c
         clusters.h
         common.h
-        percolation.c
-        sites.c
-        sites.h jumps.c jumps.h)
+        main.c
+        jumps.c
+        jumps.h)
 
-target_link_libraries(bilayer ${GSL_LIBRARIES})
+target_link_libraries(multilayer ${GSL_LIBRARIES})

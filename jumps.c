@@ -145,7 +145,7 @@ void add_edge(gsl_matrix_int *graph, int id1, int id2, int weight)
 	gsl_matrix_int_set(graph,id2,id1,weight);
 }
 
-void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int x, int y, int l, int spanning)
+void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int x, int y, int l, int spanning,bool pbcz)
 {
 	int id=nclusters_get_value(vertices, x, y, l);
 
@@ -215,6 +215,20 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 			add_edge(graph,id,idprime,1);
 	}
 
+	if(pbcz==true)
+	{
+		if((l==(vertices->nrlayers-1))&&(ivbond2d_get_value(vertices->ivbonds[l],x,y)==1))
+		{
+			int xprime=x;
+			int yprime=y;
+			int lprime=0;
+			int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
+
+			if(idprime!=-1)
+				add_edge(graph,id,idprime,1);
+		}
+	}
+
 	if((x==0)&&(spanning==DIR_X))
 	{
 		add_edge(graph,id,0,0);
@@ -236,7 +250,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 	}
 }
 
-int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning)
+int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz)
 {
 	assert(nclusters!=NULL);
 	assert(id!=0);
@@ -299,7 +313,7 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning)
 		for(int y=0;y<nclusters->ly;y++)
 			for(int l=0;l<nclusters->nrlayers;l++)
 				if(nclusters_get_value(vertices,x,y,l)!=-1)
-					process_neighbours(vertices,graph,x,y,l,spanning);
+					process_neighbours(vertices,graph,x,y,l,spanning,pbcz);
 
 #warning One could run the algorithm on all percolating clusters, rather than on just one.
 #warning One could avoid the adjacency matrix, and calculate the weights on the flight in dijkstra_distance()

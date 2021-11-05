@@ -144,7 +144,7 @@ int count_non_zeroes(const int *vals,int len)
 	return cnt;
 }
 
-bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int *random_site_is_in_cluster,const gsl_rng *rngctx)
+bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int *random_site_is_in_cluster,const gsl_rng *rngctx,bool pbcz)
 {
 	int id=1;
 
@@ -177,8 +177,19 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 						neighbours[1]=nclusters_get_value(nclusters,x,y-1,l);
 
 				if(l!=0)
-					if(ivbond2d_get_value(nclusters->ivbonds[l-1],x,y)==1)
-						neighbours[2]=nclusters_get_value(nclusters,x,y,l-1);
+				{
+					if(ivbond2d_get_value(nclusters->ivbonds[l-1], x, y)==1)
+						neighbours[2]=nclusters_get_value(nclusters, x, y, l-1);
+				}
+				else if(pbcz==true)
+				{
+					/*
+						Implementing periodic boundary conditions along the z-axis
+					*/
+
+					if(ivbond2d_get_value(nclusters->ivbonds[nclusters->nrlayers-1], x, y)==1)
+						neighbours[2]=nclusters_get_value(nclusters, x, y, nclusters->nrlayers-1);
+				}
 
 				int nr_of_neighbours=count_non_zeroes(neighbours, NR_OF_NEIGHBOURS);
 
@@ -206,7 +217,7 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 	}
 
 	/*
-		Normalization, and gathering of statistics about each cluster's extrema.
+		Normalization.
 	*/
 
 	id=1;
@@ -258,8 +269,28 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 	if(new_labels)
 		free(new_labels);
 
-	int maxxlength=0,maxylength=0;
-	int maxxid=-1,maxyid=-1;
+	/*
+		We select a random lattice site to check whether it belongs to the percolating cluster,
+		following the criterion in lecture 2 of "An Introduction to Universality" by A. Codello.
+	*/
+
+	int rx=gsl_rng_uniform_int(rngctx, nclusters->lx);
+	int ry=gsl_rng_uniform_int(rngctx, nclusters->ly);
+	int rl=gsl_rng_uniform_int(rngctx, nclusters->nrlayers);
+
+	/*
+		Finally, we count the percolating clusters.
+
+		The percolation criterion corresponds to the extension rule in:
+		J. Machta, Y.S. Choi, A. Lucke, T. Schweizer, and L.M. Chayes,
+		Phys. Rev. Lett. 75, 2792 (1995);
+		Phys. Rev. E 54, 1332 (1996).
+	*/
+
+#warning Jumps are calculated only for the first percolating cluster we find. This could be easily extended.
+
+	int nr_percolating=0;
+	bool first_has_been_found=false;
 
 	for(int c=1;c<id;c++)
 	{
@@ -269,16 +300,35 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 		int xlength=info[c].maxx-info[c].minx+1;
 		int ylength=info[c].maxy-info[c].miny+1;
 
-		if(xlength>maxxlength)
+		if(xlength==nclusters->lx)
 		{
-			maxxlength=xlength;
-			maxxid=c;
-		}
+			if(first_has_been_found==false)
+			{
+				first_has_been_found=true;
 
-		if(ylength>maxylength)
+				if(jumps!=NULL)
+					*jumps=ncluster_evaluate_jumps(nclusters, id, DIR_X, pbcz);
+			}
+
+			if(random_site_is_in_cluster!=NULL)
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==id)?(1):(0);
+
+			nr_percolating++;
+		}
+		else if(ylength==nclusters->ly)
 		{
-			maxylength=ylength;
-			maxyid=c;
+			if(first_has_been_found==false)
+			{
+				first_has_been_found=true;
+
+				if(jumps!=NULL)
+					*jumps=ncluster_evaluate_jumps(nclusters, id, DIR_Y, pbcz);
+			}
+
+			if(random_site_is_in_cluster!=NULL)
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==id)?(1):(0);
+
+			nr_percolating++;
 		}
 	}
 
@@ -288,45 +338,5 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 	if(labels)
 		free(labels);
 
-	/*
-		Finally, we select a random lattice site to check whether it belongs to the percolating cluster,
-		following the criterion in lecture 2 of "An Introduction to Universality" by A. Codello.
-	*/
-
-	int rx=gsl_rng_uniform_int(rngctx, nclusters->lx);
-	int ry=gsl_rng_uniform_int(rngctx, nclusters->ly);
-	int rl=gsl_rng_uniform_int(rngctx, nclusters->nrlayers);
-
-	/*
-		That's the percolation criterion we use.
-
-		This corresponds to the extension rule in:
-		J. Machta, Y.S. Choi, A. Lucke, T. Schweizer, and L.M. Chayes,
-		Phys. Rev. Lett. 75, 2792 (1995);
-		Phys. Rev. E 54, 1332 (1996).
-	*/
-
-	if(maxxlength==nclusters->lx)
-	{
-		if(jumps!=NULL)
-			*jumps=ncluster_evaluate_jumps(nclusters,maxxid,DIR_X);
-
-		if(random_site_is_in_cluster!=NULL)
-			*random_site_is_in_cluster=(nclusters_get_value(nclusters,rx,ry,rl)==maxxid)?(1):(0);
-
-		return true;
-	}
-
-	if(maxylength==nclusters->ly)
-	{
-		if(jumps!=NULL)
-			*jumps=ncluster_evaluate_jumps(nclusters,maxyid,DIR_Y);
-
-		if(random_site_is_in_cluster!=NULL)
-			*random_site_is_in_cluster=(nclusters_get_value(nclusters,rx,ry,rl)==maxyid)?(1):(0);
-
-		return true;
-	}
-
-	return false;
+	return nr_percolating;
 }
