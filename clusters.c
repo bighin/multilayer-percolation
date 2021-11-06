@@ -307,11 +307,11 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, id, DIR_X, pbcz);
+					*jumps=ncluster_evaluate_jumps(nclusters, c, DIR_X, pbcz);
 			}
 
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==id)?(1):(0);
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==c)?(1):(0);
 
 			nr_percolating++;
 		}
@@ -322,11 +322,11 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, id, DIR_Y, pbcz);
+					*jumps=ncluster_evaluate_jumps(nclusters, c, DIR_Y, pbcz);
 			}
 
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==id)?(1):(0);
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==c)?(1):(0);
 
 			nr_percolating++;
 		}

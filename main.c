@@ -456,6 +456,18 @@ int go(int id)
 		config.nrlayers=2;
 		do_batch(&config, "jumps256_pbcz.dat");
 		break;
+
+		case 101:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.mincentipperp=26;
+		config.maxcentipperp=26;
+		config.mincentipperp=50;
+		config.maxcentipperp=50;
+		config.xdim=config.ydim=16;
+		config.nrlayers=2;
+		do_batch(&config, "jumps16debug.dat");
+		break;
 	}
 
 	return 0;
