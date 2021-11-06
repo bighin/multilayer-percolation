@@ -144,7 +144,7 @@ int count_non_zeroes(const int *vals,int len)
 	return cnt;
 }
 
-bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int *random_site_is_in_cluster,const gsl_rng *rngctx,bool pbcz)
+int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int *random_site_is_in_cluster,const gsl_rng *rngctx,bool pbcz)
 {
 	int id=1;
 
@@ -287,18 +287,19 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 		Phys. Rev. E 54, 1332 (1996).
 	*/
 
-#warning Jumps are calculated only for the first percolating cluster we find. This could be easily extended.
+#warning Jumps are calculated only for the first percolating cluster we find. This could be easily extended to all clusters.
+#warning The only difference is that then jumps should be divided by nr_percolating
 
 	int nr_percolating=0;
 	bool first_has_been_found=false;
 
-	for(int c=1;c<id;c++)
+	for(int thisid=1;thisid<id;thisid++)
 	{
-		assert(info[c].maxx>=info[c].minx);
-		assert(info[c].maxy>=info[c].miny);
+		assert(info[thisid].maxx>=info[thisid].minx);
+		assert(info[thisid].maxy>=info[thisid].miny);
 
-		int xlength=info[c].maxx-info[c].minx+1;
-		int ylength=info[c].maxy-info[c].miny+1;
+		int xlength=info[thisid].maxx-info[thisid].minx+1;
+		int ylength=info[thisid].maxy-info[thisid].miny+1;
 
 		if(xlength==nclusters->lx)
 		{
@@ -307,11 +308,11 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, c, DIR_X, pbcz);
+					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz);
 			}
 
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==c)?(1):(0);
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
 
 			nr_percolating++;
 		}
@@ -322,11 +323,11 @@ bool nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, c, DIR_Y, pbcz);
+					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_Y, pbcz);
 			}
 
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==c)?(1):(0);
+				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
 
 			nr_percolating++;
 		}

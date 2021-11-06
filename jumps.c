@@ -273,7 +273,7 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 	int nr_vertices=2;
 
 	/*
-		We start by assign a progressive ID to each vertex...
+		We start by assigning a progressive ID to each vertex...
 	*/
 
 	struct nclusters_t *vertices=nclusters_init(nclusters->lx,nclusters->ly,nclusters->nrlayers);
@@ -315,8 +315,12 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 				if(nclusters_get_value(vertices,x,y,l)!=-1)
 					process_neighbours(vertices,graph,x,y,l,spanning,pbcz);
 
-#warning One could run the algorithm on all percolating clusters, rather than on just one.
-#warning One could avoid the adjacency matrix, and calculate the weights on the flight in dijkstra_distance()
+	/*
+		One could avoid the adjacency matrix, and calculate the weights
+		on the flight in dijkstra_distance(), maybe...
+
+		I am not sure how faster this would be...
+	*/
 
 	int jumps=dijkstra_distance(graph, 0, 1);
 

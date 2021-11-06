@@ -35,18 +35,71 @@ int get_random_value(double p,gsl_rng *rng_ctx)
 	return 0;
 }
 
+struct config_t
+{
+	int total_runs;
+	int xdim,ydim,nrlayers;
+
+	bool measure_jumps;
+	bool pbcz;
+
+	int mincentipperp,maxcentipperp;
+	int mincentip,maxcentip;
+};
+
+struct statistics_t
+{
+	int cntsingle;
+	int cntbilayer;
+
+	int jumps;
+	int matches1;
+	int matches2;
+
+	int nr_percolating1;
+	int nr_percolating2;
+};
+
+void reset_stats(struct statistics_t *st)
+{
+	st->cntsingle=0;
+	st->cntbilayer=0;
+
+	st->jumps=0;
+	st->matches1=0;
+	st->matches2=0;
+
+	st->nr_percolating1=0;
+	st->nr_percolating2=0;
+}
+
+void add_stats(struct statistics_t *total,struct statistics_t *st)
+{
+	total->cntsingle+=st->cntsingle;
+	total->cntbilayer+=st->cntbilayer;
+
+	total->jumps+=st->jumps;
+	total->matches1+=st->matches1;
+	total->matches2+=st->matches2;
+
+	total->nr_percolating1+=st->nr_percolating1;
+	total->nr_percolating2+=st->nr_percolating2;
+}
+
 #define TWO_LAYER_PERCOLATION		(1)
 #define SINGLE_LAYER_PERCOLATION	(2)
 
-int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,int *jumps,int *matches1,int *matches2,
-		int *nr_percolating1,int *nr_percolating2,bool pbcz)
+int do_run(struct config_t *config,double p,double pperp,gsl_rng *rng,struct statistics_t *stat)
 {
-	struct nclusters_t *ncs;
+	int xdim=config->xdim;
+	int ydim=config->ydim;
+	int zdim=config->nrlayers;
+
+	struct nclusters_t *ncs=nclusters_init(xdim,ydim,zdim);
+	assert(ncs);
+
 	int result=0;
 
-	ncs=nclusters_init(xdim,ydim,zdim);
-	assert(ncs);
-	
 	/*
 		The random bonds are created...
 	*/
@@ -72,7 +125,7 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 			then there are no vertical bonds joining the last and the first layer.
 		*/
 
-		if((z==(zdim-1))&&(pbcz==false))
+		if((z==(zdim-1))&&(config->pbcz==false))
 		{
 			ncs->ivbonds[z]=NULL;
 			continue;
@@ -92,10 +145,12 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 	/*
 		The clusters are identified and measured.
 
-		First: clusters that can span on more than one layer.
+		First: clusters that can span more than one layer.
 	*/
 
-	if((*nr_percolating1=nclusters_identify_percolation(ncs,jumps,matches1,rng,pbcz))>0)
+	int *pjumps=(config->measure_jumps==true)?(&stat->jumps):(NULL);
+
+	if((stat->nr_percolating1=nclusters_identify_percolation(ncs,pjumps,&stat->matches1,rng,config->pbcz))>0)
 			result|=TWO_LAYER_PERCOLATION;
 
 	/*
@@ -105,7 +160,7 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 
 	for(int z=0;z<zdim;z++)
 	{
-		if((z==(zdim-1))&&(pbcz==false))
+		if((z==(zdim-1))&&(config->pbcz==false))
 			continue;
 
 		for(int x=0;x<xdim;x++)
@@ -113,7 +168,7 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 				ivbond2d_set_value(ncs->ivbonds[z], x, y, 0);
 	}
 
-	if((*nr_percolating2=nclusters_identify_percolation(ncs,NULL,matches2,rng,pbcz))>0)
+	if((stat->nr_percolating2=nclusters_identify_percolation(ncs,NULL,&stat->matches2,rng,config->pbcz))>0)
 		result|=SINGLE_LAYER_PERCOLATION;
 
 	/*
@@ -123,8 +178,8 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 	for(int z=0;z<zdim;z++)
 	{
 		ibond2d_fini(ncs->bonds[z]);
-		
-		if((z!=(zdim-1))||(pbcz==true))
+
+		if((z!=(zdim-1))||(config->pbcz==true))
 			ivbond2d_fini(ncs->ivbonds[z]);
 	}
 
@@ -132,18 +187,6 @@ int do_run_bond(int xdim,int ydim,int zdim,double p,double pperp,gsl_rng *rng,in
 
 	return result;
 }
-
-struct config_t
-{
-	int total_runs;
-	int xdim,ydim,nrlayers;
-
-	bool measure_jumps;
-	bool pbcz;
-
-	int mincentipperp,maxcentipperp;
-	int mincentip,maxcentip;
-};
 
 void do_batch(struct config_t *config,char *outfile)
 {
@@ -153,72 +196,63 @@ void do_batch(struct config_t *config,char *outfile)
 	setvbuf(out,(char *)(NULL),_IONBF,0);
 
 #ifdef NDEBUG
-#pragma omp parallel for collapse(2) schedule(dynamic)
+#pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,gsl_rng_mt19937)
 #endif
 
 	for(int centipperp=config->mincentipperp;centipperp<=config->maxcentipperp;centipperp+=1)
 	{
 		for(int centip=config->mincentip;centip<=config->maxcentip;centip+=1)
 		{
-			double p,pperp;
-			gsl_rng *rng_ctx;
+			double p=0.01*centip;
+			double pperp=0.01*centipperp;
 
-			p=0.01*centip;
-			pperp=0.01*centipperp;
-
-			rng_ctx=gsl_rng_alloc(gsl_rng_mt19937);
+			gsl_rng *rng_ctx=gsl_rng_alloc(gsl_rng_mt19937);
 			assert(rng_ctx!=NULL);
 			seed_rng(rng_ctx);
 
-			int cntsingle,cntbilayer;
-			int totaljumps=0,totalmatches1=0,totalmatches2=0;
-			int totalpercolating1=0,totalpercolating2=0;
+			struct statistics_t total;
+			reset_stats(&total);
 
-			cntsingle=cntbilayer=0;
 			for(int c=0;c<config->total_runs;c++)
 			{
-				int jumps=0,matches1=0,matches2=0;
-				int nr_percolating1=0,nr_percolating2=0;
+				struct statistics_t stats;
+				reset_stats(&stats);
 
-				int *pjumps=(config->measure_jumps==true)?(&jumps):(NULL);
-
-				switch(do_run_bond(config->xdim,config->ydim,config->nrlayers,p,pperp,rng_ctx,pjumps,&matches1,&matches2,&nr_percolating1,&nr_percolating2,config->pbcz))
+				switch(do_run(config, p, pperp, rng_ctx, &stats))
 				{
 					case 0:
 					break;
 					
 					case TWO_LAYER_PERCOLATION:
-					cntbilayer++;
+					stats.cntbilayer++;
 					break;
 
 					case SINGLE_LAYER_PERCOLATION:
-					cntsingle++;
+					stats.cntsingle++;
 					break;
 
 					case SINGLE_LAYER_PERCOLATION|TWO_LAYER_PERCOLATION:
-					cntbilayer++;
-					cntsingle++;
+					stats.cntbilayer++;
+					stats.cntsingle++;
 					break;
 				}
 
-				totaljumps+=jumps;
-				totalmatches1+=matches1;
-				totalmatches2+=matches2;
-				totalpercolating1+=nr_percolating1;
-				totalpercolating2+=nr_percolating2;
+				add_stats(&total,&stats);
 			}
 
 			gsl_rng_free(rng_ctx);
 
 #pragma omp critical
 			{
-				fprintf(out,"%f %f %f %f %f %f %f %f %f\n",p,pperp,((double)(cntbilayer))/((double)(config->total_runs)),
-	                                                                           ((double)(cntsingle))/((double)(config->total_runs)),
-	                                                                           ((double)(totaljumps))/((double)(config->total_runs)),
-					                                           ((double)(totalmatches1))/((double)(config->total_runs)),
-					                                           ((double)(totalmatches2))/((double)(config->total_runs)),
-									           ((double)(totalpercolating1))/((double)(config->total_runs)),
-									           ((double)(totalpercolating2))/((double)(config->total_runs)));
+				fprintf(out,"%f %f ",p,pperp);
+				fprintf(out,"%f ",((double)(total.cntbilayer))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.cntsingle))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.jumps))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.matches1))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.matches2))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.nr_percolating1))/((double)(config->total_runs)));
+				fprintf(out,"%f\n",((double)(total.nr_percolating2))/((double)(config->total_runs)));
+
 				fflush(out);
 			}
 		}
@@ -300,6 +334,7 @@ int go(int id)
 		case 9:
 		config.pbcz=false;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=16;
@@ -310,6 +345,7 @@ int go(int id)
 		case 10:
 		config.pbcz=false;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=32;
@@ -320,6 +356,7 @@ int go(int id)
 		case 11:
 		config.pbcz=false;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=64;
@@ -330,6 +367,7 @@ int go(int id)
 		case 12:
 		config.pbcz=false;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=128;
@@ -340,6 +378,7 @@ int go(int id)
 		case 13:
 		config.pbcz=false;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=256;
@@ -410,6 +449,7 @@ int go(int id)
 		case 22:
 		config.pbcz=true;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=16;
@@ -420,6 +460,7 @@ int go(int id)
 		case 23:
 		config.pbcz=true;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=32;
@@ -430,6 +471,7 @@ int go(int id)
 		case 24:
 		config.pbcz=true;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=64;
@@ -440,6 +482,7 @@ int go(int id)
 		case 25:
 		config.pbcz=true;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=128;
@@ -450,6 +493,7 @@ int go(int id)
 		case 26:
 		config.pbcz=true;
 		config.measure_jumps=true;
+		config.total_runs=1000;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=256;
@@ -467,6 +511,9 @@ int go(int id)
 		config.xdim=config.ydim=16;
 		config.nrlayers=2;
 		do_batch(&config, "jumps16debug.dat");
+		break;
+
+		default:
 		break;
 	}
 
