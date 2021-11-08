@@ -217,7 +217,7 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 	}
 
 	/*
-		Normalization.
+		Normalization and collection of statistics about the clusters.
 	*/
 
 	id=1;
@@ -290,10 +290,11 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 #warning Jumps are calculated only for the first percolating cluster we find. This could be easily extended to all clusters.
 #warning The only difference is that then jumps should be divided by nr_percolating
 
+	int maxid=id-1;
 	int nr_percolating=0;
 	bool first_has_been_found=false;
 
-	for(int thisid=1;thisid<id;thisid++)
+	for(int thisid=1;thisid<=maxid;thisid++)
 	{
 		assert(info[thisid].maxx>=info[thisid].minx);
 		assert(info[thisid].maxy>=info[thisid].miny);
@@ -311,8 +312,11 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz);
 			}
 
+#error Controllare bene la logica di questo!
+
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
+				if(*random_site_is_in_cluster==0)
+					*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
 
 			nr_percolating++;
 		}
@@ -327,7 +331,8 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 			}
 
 			if(random_site_is_in_cluster!=NULL)
-				*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
+				if(*random_site_is_in_cluster==0)
+					*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
 
 			nr_percolating++;
 		}
