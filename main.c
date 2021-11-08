@@ -504,13 +504,24 @@ int go(int id)
 		case 101:
 		config.pbcz=false;
 		config.measure_jumps=true;
-		config.mincentipperp=26;
-		config.maxcentipperp=26;
+		config.mincentip=26;
+		config.maxcentip=26;
 		config.mincentipperp=50;
 		config.maxcentipperp=50;
 		config.xdim=config.ydim=16;
 		config.nrlayers=2;
 		do_batch(&config, "jumps16debug.dat");
+		break;
+
+		case 102:
+		config.pbcz=false;
+		config.mincentip=57;
+		config.maxcentip=57;
+		config.mincentipperp=3;
+		config.maxcentipperp=3;
+		config.xdim=config.ydim=16;
+		config.nrlayers=2;
+		do_batch(&config, "bilayer16.dat");
 		break;
 
 		default:

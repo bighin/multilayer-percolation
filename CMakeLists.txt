@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.11)
 project(multilayer C)
 
 set(CMAKE_C_STANDARD 11)
