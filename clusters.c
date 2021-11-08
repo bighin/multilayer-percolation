@@ -312,11 +312,10 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz);
 			}
 
-#error Controllare bene la logica di questo!
-
 			if(random_site_is_in_cluster!=NULL)
 				if(*random_site_is_in_cluster==0)
-					*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
+					if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
+						*random_site_is_in_cluster=1;
 
 			nr_percolating++;
 		}
@@ -332,7 +331,8 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 
 			if(random_site_is_in_cluster!=NULL)
 				if(*random_site_is_in_cluster==0)
-					*random_site_is_in_cluster=(nclusters_get_value(nclusters, rx, ry, rl)==thisid) ? (1) : (0);
+					if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
+						*random_site_is_in_cluster=1;
 
 			nr_percolating++;
 		}
