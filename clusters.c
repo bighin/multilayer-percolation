@@ -144,7 +144,7 @@ int count_non_zeroes(const int *vals,int len)
 	return cnt;
 }
 
-int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int *random_site_is_in_cluster,const gsl_rng *rngctx,bool pbcz)
+int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,struct statistics_t *stat,int seq,const gsl_rng *rngctx,bool pbcz)
 {
 	int id=1;
 
@@ -278,6 +278,17 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 	int ry=gsl_rng_uniform_int(rngctx, nclusters->ly);
 	int rl=gsl_rng_uniform_int(rngctx, nclusters->nrlayers);
 
+	int rx_by_layer[MAX_NR_OF_LAYERS];
+	int ry_by_layer[MAX_NR_OF_LAYERS];
+	int rz_by_layer[MAX_NR_OF_LAYERS];
+
+	for(int z=0;z<nclusters->nrlayers;z++)
+	{
+		rx_by_layer[z]=gsl_rng_uniform_int(rngctx, nclusters->lx);
+		ry_by_layer[z]=gsl_rng_uniform_int(rngctx, nclusters->ly);
+		rz_by_layer[z]=z;
+	}
+
 	/*
 		Finally, we count the percolating clusters.
 
@@ -312,10 +323,36 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz);
 			}
 
-			if(random_site_is_in_cluster!=NULL)
-				if(*random_site_is_in_cluster==0)
-					if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
-						*random_site_is_in_cluster=1;
+			if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
+			{
+				switch(seq)
+				{
+					case 1:
+					stat->matches1=1;
+					break;
+
+					case 2:
+					stat->matches2=1;
+					break;
+				}
+			}
+
+			for(int c=0;c<nclusters->nrlayers;c++)
+			{
+				if(nclusters_get_value(nclusters, rx_by_layer[c], ry_by_layer[c], rz_by_layer[c])==thisid)
+				{
+					switch(seq)
+					{
+						case 1:
+						stat->matches1_by_layer[c]=1;
+						break;
+
+						case 2:
+						stat->matches2_by_layer[c]=1;
+						break;
+					}
+				}
+			}
 
 			nr_percolating++;
 		}
@@ -329,10 +366,36 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,int 
 					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_Y, pbcz);
 			}
 
-			if(random_site_is_in_cluster!=NULL)
-				if(*random_site_is_in_cluster==0)
-					if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
-						*random_site_is_in_cluster=1;
+			if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
+			{
+				switch(seq)
+				{
+					case 1:
+					stat->matches1=1;
+					break;
+
+					case 2:
+					stat->matches2=1;
+					break;
+				}
+			}
+
+			for(int c=0;c<nclusters->nrlayers;c++)
+			{
+				if(nclusters_get_value(nclusters, rx_by_layer[c], ry_by_layer[c], rz_by_layer[c])==thisid)
+				{
+					switch(seq)
+					{
+						case 1:
+						stat->matches1_by_layer[c]=1;
+						break;
+
+						case 2:
+						stat->matches2_by_layer[c]=1;
+						break;
+					}
+				}
+			}
 
 			nr_percolating++;
 		}

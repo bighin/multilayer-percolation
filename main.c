@@ -47,19 +47,6 @@ struct config_t
 	int mincentip,maxcentip;
 };
 
-struct statistics_t
-{
-	int cntsingle;
-	int cntbilayer;
-
-	int jumps;
-	int matches1;
-	int matches2;
-
-	int nr_percolating1;
-	int nr_percolating2;
-};
-
 void reset_stats(struct statistics_t *st)
 {
 	st->cntsingle=0;
@@ -68,6 +55,12 @@ void reset_stats(struct statistics_t *st)
 	st->jumps=0;
 	st->matches1=0;
 	st->matches2=0;
+
+	for(int c=0;c<MAX_NR_OF_LAYERS;c++)
+	{
+		st->matches1_by_layer[c]=0;
+		st->matches2_by_layer[c]=0;
+	}
 
 	st->nr_percolating1=0;
 	st->nr_percolating2=0;
@@ -81,6 +74,12 @@ void add_stats(struct statistics_t *total,struct statistics_t *st)
 	total->jumps+=st->jumps;
 	total->matches1+=st->matches1;
 	total->matches2+=st->matches2;
+
+	for(int c=0;c<MAX_NR_OF_LAYERS;c++)
+	{
+		total->matches1_by_layer[c]+=st->matches1_by_layer[c];
+		total->matches2_by_layer[c]+=st->matches2_by_layer[c];
+	}
 
 	total->nr_percolating1+=st->nr_percolating1;
 	total->nr_percolating2+=st->nr_percolating2;
@@ -150,7 +149,7 @@ int do_run(struct config_t *config,double p,double pperp,gsl_rng *rng,struct sta
 
 	int *pjumps=(config->measure_jumps==true)?(&stat->jumps):(NULL);
 
-	if((stat->nr_percolating1=nclusters_identify_percolation(ncs,pjumps,&stat->matches1,rng,config->pbcz))>0)
+	if((stat->nr_percolating1=nclusters_identify_percolation(ncs,pjumps,stat,1,rng,config->pbcz))>0)
 			result|=TWO_LAYER_PERCOLATION;
 
 	/*
@@ -168,7 +167,7 @@ int do_run(struct config_t *config,double p,double pperp,gsl_rng *rng,struct sta
 				ivbond2d_set_value(ncs->ivbonds[z], x, y, 0);
 	}
 
-	if((stat->nr_percolating2=nclusters_identify_percolation(ncs,NULL,&stat->matches2,rng,config->pbcz))>0)
+	if((stat->nr_percolating2=nclusters_identify_percolation(ncs,NULL,stat,2,rng,config->pbcz))>0)
 		result|=SINGLE_LAYER_PERCOLATION;
 
 	/*
@@ -251,7 +250,15 @@ void do_batch(struct config_t *config,char *outfile)
 				fprintf(out,"%f ",((double)(total.matches1))/((double)(config->total_runs)));
 				fprintf(out,"%f ",((double)(total.matches2))/((double)(config->total_runs)));
 				fprintf(out,"%f ",((double)(total.nr_percolating1))/((double)(config->total_runs)));
-				fprintf(out,"%f\n",((double)(total.nr_percolating2))/((double)(config->total_runs)));
+				fprintf(out,"%f ",((double)(total.nr_percolating2))/((double)(config->total_runs)));
+
+				for(int z=0;z<config->nrlayers;z++)
+					fprintf(out,"%f ",((double)(total.matches1_by_layer[z]))/((double)(config->total_runs)));
+
+				for(int z=0;z<config->nrlayers;z++)
+					fprintf(out,"%f ",((double)(total.matches2_by_layer[z]))/((double)(config->total_runs)));
+
+				fprintf(out,"\n");
 
 				fflush(out);
 			}
