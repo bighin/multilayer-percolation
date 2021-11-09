@@ -299,6 +299,14 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 		vertices->ivbonds[c]=nclusters->ivbonds[c];
 	}
 
+	if(pbcz==true)
+	{
+		int c=nclusters->nrlayers-1;
+
+		assert(nclusters->ivbonds[c]!=NULL);
+		vertices->ivbonds[c]=nclusters->ivbonds[c];
+	}
+
 	/*
 		...and then we create and populate the adjacency matrix.
 	*/
