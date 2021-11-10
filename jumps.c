@@ -283,7 +283,27 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 		for(int y=0;y<nclusters->ly;y++)
 			for(int l=0;l<nclusters->nrlayers;l++)
 				if(nclusters_get_value(nclusters, x, y, l)==id)
-					nclusters_set_value(vertices, x, y, l, nr_vertices++);
+				{
+					int new_vertex_id;
+
+					/*
+						One could give a new id to every site in the cluster, and the
+						algorithm would still work OK.
+
+						However, a bit of optimization in uniting already at this level
+						sites on the same layer goes a long way into saving memory and
+						computation complexity later.
+					*/
+
+					if((x>0)&&(nclusters_get_value(nclusters, x-1, y, l)==id))
+						new_vertex_id=nclusters_get_value(vertices, x-1, y, l);
+					else if((y>0)&&(nclusters_get_value(nclusters, x, y-1, l)==id))
+						new_vertex_id=nclusters_get_value(vertices, x, y-1, l);
+					else
+						new_vertex_id=nr_vertices++;
+
+					nclusters_set_value(vertices, x, y, l, new_vertex_id);
+				}
 				else
 					nclusters_set_value(vertices, x, y, l, -1);
 

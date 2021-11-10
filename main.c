@@ -45,6 +45,8 @@ struct config_t
 
 	int mincentipperp,maxcentipperp;
 	int mincentip,maxcentip;
+
+	bool verbose;
 };
 
 void reset_stats(struct statistics_t *st)
@@ -195,7 +197,7 @@ void do_batch(struct config_t *config,char *outfile)
 	setvbuf(out,(char *)(NULL),_IONBF,0);
 
 #ifdef NDEBUG
-#pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,gsl_rng_mt19937)
+#pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,stderr,gsl_rng_mt19937)
 #endif
 
 	for(int centipperp=config->mincentipperp;centipperp<=config->maxcentipperp;centipperp+=1)
@@ -237,12 +239,27 @@ void do_batch(struct config_t *config,char *outfile)
 				}
 
 				add_stats(&total,&stats);
+
+#pragma omp critical
+				{
+					if(config->verbose==true)
+					{
+						if(!(c%100))
+							fprintf(stderr,"%d/%d\n",c,config->total_runs);
+					}
+				}
+
 			}
 
 			gsl_rng_free(rng_ctx);
 
 #pragma omp critical
 			{
+				if(config->verbose==true)
+				{
+					fprintf(stderr,"%f %f\n",p,pperp);
+				}
+
 				fprintf(out,"%f %f ",p,pperp);
 				fprintf(out,"%f ",((double)(total.cntbilayer))/((double)(config->total_runs)));
 				fprintf(out,"%f ",((double)(total.cntsingle))/((double)(config->total_runs)));
@@ -279,6 +296,7 @@ int go(int id)
 	config.maxcentipperp=100;
 	config.mincentip=0;
 	config.maxcentip=100;
+	config.verbose=false;
 
 	switch(id)
 	{
@@ -529,6 +547,19 @@ int go(int id)
 		config.xdim=config.ydim=16;
 		config.nrlayers=2;
 		do_batch(&config, "bilayer16.dat");
+		break;
+
+		case 139:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.mincentip=28;
+		config.maxcentip=50;
+		config.mincentipperp=50;
+		config.maxcentipperp=50;
+		config.xdim=config.ydim=256;
+		config.nrlayers=2;
+		do_batch(&config, "jumps256.dat");
 		break;
 
 		default:
