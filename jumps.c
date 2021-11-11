@@ -5,6 +5,7 @@
 #include <limits.h>
 
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_spmatrix.h>
 
 #include "jumps.h"
 #include "clusters.h"
@@ -23,6 +24,45 @@ void gsl_matrix_int_print(gsl_matrix_int *m)
 
 		printf("\n");
 	}
+}
+
+struct adjacency_t
+{
+	gsl_spmatrix_int *m;
+	int nr_vertices;
+};
+
+struct adjacency_t *init_adjacency(int nr_vertices)
+{
+	struct adjacency_t *ret=malloc(sizeof(struct adjacency_t));
+
+	ret->m=gsl_spmatrix_int_alloc(nr_vertices,nr_vertices);
+	ret->nr_vertices=nr_vertices;
+
+	return ret;
+}
+
+void fini_adjacency(struct adjacency_t *adj)
+{
+	gsl_spmatrix_int_free(adj->m);
+}
+
+void adjacency_set(struct adjacency_t *adj, int i, int j, int weight)
+{
+	if(weight==0)
+		gsl_spmatrix_int_set(adj->m,i,j,INT_MAX);
+
+	gsl_spmatrix_int_set(adj->m,i,j,1+weight);
+}
+
+int adjacency_get(struct adjacency_t *adj, int i, int j)
+{
+	int result=gsl_spmatrix_int_get(adj->m,i,j);
+
+	if(result==0)
+		return INT_MAX;
+
+	return result-1;
 }
 
 /*
@@ -51,11 +91,9 @@ int minimum_distance(const int *distances, const bool *in_spt, int V)
 	Dijkstra algorithm, adapted from: https://gist.github.com/zSANSANz/408c77daeb734cb40936c39b610dc579
 */
 
-int dijkstra_distance(gsl_matrix_int *graph, int from, int to)
+int dijkstra_distance(struct adjacency_t *adj, int from, int to)
 {
-	int V=graph->size1;
-
-	assert(graph->size1==graph->size1);
+	int V=adj->nr_vertices;
 
 	/*
 		The output array. distances[i] will hold the shortest distance from 'from' to i.
@@ -117,7 +155,7 @@ int dijkstra_distance(gsl_matrix_int *graph, int from, int to)
 				smaller than current value of distances[v]
 			*/
 
-			int edge_weight=gsl_matrix_int_get(graph, u, v);
+			int edge_weight=adjacency_get(adj, u, v);
 
 			if((in_spt[v]==false)&&(edge_weight<INT_MAX)&&(distances[u]!=INT_MAX)&&(distances[u]+edge_weight<distances[v]))
 				distances[v]=distances[u]+edge_weight;
@@ -135,17 +173,17 @@ int dijkstra_distance(gsl_matrix_int *graph, int from, int to)
 	return result;
 }
 
-void add_edge(gsl_matrix_int *graph, int id1, int id2, int weight)
+void add_edge(struct adjacency_t *adj, int id1, int id2, int weight)
 {
 	/*
 		This could be redundant.
 	*/
 
-	gsl_matrix_int_set(graph,id1,id2,weight);
-	gsl_matrix_int_set(graph,id2,id1,weight);
+	adjacency_set(adj,id1,id2,weight);
+	adjacency_set(adj,id2,id1,weight);
 }
 
-void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int x, int y, int l, int spanning,bool pbcz)
+void process_neighbours(struct nclusters_t *vertices, struct adjacency_t *adj, int x, int y, int l, int spanning,bool pbcz)
 {
 	int id=nclusters_get_value(vertices, x, y, l);
 
@@ -157,7 +195,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,0);
+			add_edge(adj,id,idprime,0);
 	}
 
 	if((y!=0)&&(ibond2d_get_value(vertices->bonds[l],x,y-1,DIR_Y)==1))
@@ -168,7 +206,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,0);
+			add_edge(adj,id,idprime,0);
 	}
 
 	if((l!=0)&&(ivbond2d_get_value(vertices->ivbonds[l-1],x,y)==1))
@@ -179,7 +217,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,1);
+			add_edge(adj,id,idprime,1);
 	}
 
 	if((x!=(vertices->lx-1))&&(ibond2d_get_value(vertices->bonds[l],x,y,DIR_X)==1))
@@ -190,7 +228,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,0);
+			add_edge(adj,id,idprime,0);
 	}
 
 	if((y!=(vertices->ly-1))&&(ibond2d_get_value(vertices->bonds[l],x,y,DIR_Y)==1))
@@ -201,7 +239,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,0);
+			add_edge(adj,id,idprime,0);
 	}
 
 	if((l!=(vertices->nrlayers-1))&&(ivbond2d_get_value(vertices->ivbonds[l],x,y)==1))
@@ -212,7 +250,7 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 		int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 		if(idprime!=-1)
-			add_edge(graph,id,idprime,1);
+			add_edge(adj,id,idprime,1);
 	}
 
 	if(pbcz==true)
@@ -225,28 +263,28 @@ void process_neighbours(struct nclusters_t *vertices, gsl_matrix_int *graph, int
 			int idprime=nclusters_get_value(vertices, xprime, yprime, lprime);
 
 			if(idprime!=-1)
-				add_edge(graph,id,idprime,1);
+				add_edge(adj,id,idprime,1);
 		}
 	}
 
 	if((x==0)&&(spanning==DIR_X))
 	{
-		add_edge(graph,id,0,0);
+		add_edge(adj,id,0,0);
 	}
 
 	if((x==(vertices->lx-1))&&(spanning==DIR_X))
 	{
-		add_edge(graph,id,1,0);
+		add_edge(adj,id,1,0);
 	}
 
 	if((y==0)&&(spanning==DIR_Y))
 	{
-		add_edge(graph,id,0,0);
+		add_edge(adj,id,0,0);
 	}
 
 	if((y==(vertices->ly-1))&&(spanning==DIR_Y))
 	{
-		add_edge(graph,id,1,0);
+		add_edge(adj,id,1,0);
 	}
 }
 
@@ -333,17 +371,13 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 		...and then we create and populate the adjacency matrix.
 	*/
 
-	gsl_matrix_int *graph=gsl_matrix_int_alloc(nr_vertices,nr_vertices);
-
-	for(int i=0;i<nr_vertices;i++)
-		for(int j=0;j<nr_vertices;j++)
-			gsl_matrix_int_set(graph,i,j,INT_MAX);
+	struct adjacency_t *adj=init_adjacency(nr_vertices);
 
 	for(int x=0;x<nclusters->lx;x++)
 		for(int y=0;y<nclusters->ly;y++)
 			for(int l=0;l<nclusters->nrlayers;l++)
 				if(nclusters_get_value(vertices,x,y,l)!=-1)
-					process_neighbours(vertices,graph,x,y,l,spanning,pbcz);
+					process_neighbours(vertices,adj,x,y,l,spanning,pbcz);
 
 	/*
 		One could avoid the adjacency matrix, and calculate the weights
@@ -352,7 +386,7 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 		I am not sure how faster this would be...
 	*/
 
-	int jumps=dijkstra_distance(graph, 0, 1);
+	int jumps=dijkstra_distance(adj, 0, 1);
 
 	/*
 		Finally, we free the vertices structure along with graph adjacency matrix
@@ -362,8 +396,8 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 	if(vertices)
 		nclusters_fini(vertices);
 
-	if(graph)
-		gsl_matrix_int_free(graph);
+	if(adj)
+		fini_adjacency(adj);
 
 	return jumps;
 }
