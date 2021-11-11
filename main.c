@@ -43,8 +43,8 @@ struct config_t
 	bool measure_jumps;
 	bool pbcz;
 
-	int mincentipperp,maxcentipperp;
-	int mincentip,maxcentip;
+	int minmillipperp,maxmillipperp,incmillipperp;
+	int minmillip,maxmillip,incmillip;
 
 	bool verbose;
 };
@@ -200,12 +200,12 @@ void do_batch(struct config_t *config,char *outfile)
 #pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,stderr,gsl_rng_mt19937)
 #endif
 
-	for(int centipperp=config->mincentipperp;centipperp<=config->maxcentipperp;centipperp+=1)
+	for(int millipperp=config->minmillipperp;millipperp<=config->maxmillipperp;millipperp+=config->incmillipperp)
 	{
-		for(int centip=config->mincentip;centip<=config->maxcentip;centip+=1)
+		for(int millip=config->minmillip;millip<=config->maxmillip;millip+=config->incmillip)
 		{
-			double p=0.01*centip;
-			double pperp=0.01*centipperp;
+			double p=0.001*millip;
+			double pperp=0.001*millipperp;
 
 			gsl_rng *rng_ctx=gsl_rng_alloc(gsl_rng_mt19937);
 			assert(rng_ctx!=NULL);
@@ -292,10 +292,12 @@ int go(int id)
 
 	config.total_runs=100;
 	config.measure_jumps=false;
-	config.mincentipperp=0;
-	config.maxcentipperp=100;
-	config.mincentip=0;
-	config.maxcentip=100;
+	config.minmillipperp=0;
+	config.maxmillipperp=1000;
+	config.incmillipperp=10;
+	config.minmillip=0;
+	config.maxmillip=1000;
+	config.incmillip=10;
 	config.verbose=false;
 
 	switch(id)
@@ -360,8 +362,8 @@ int go(int id)
 		config.pbcz=false;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=16;
 		config.nrlayers=2;
 		do_batch(&config, "jumps16.dat");
@@ -371,8 +373,8 @@ int go(int id)
 		config.pbcz=false;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=32;
 		config.nrlayers=2;
 		do_batch(&config, "jumps32.dat");
@@ -382,8 +384,8 @@ int go(int id)
 		config.pbcz=false;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=64;
 		config.nrlayers=2;
 		do_batch(&config, "jumps64.dat");
@@ -393,8 +395,8 @@ int go(int id)
 		config.pbcz=false;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=128;
 		config.nrlayers=2;
 		do_batch(&config, "jumps128.dat");
@@ -404,8 +406,8 @@ int go(int id)
 		config.pbcz=false;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=256;
 		config.nrlayers=2;
 		do_batch(&config, "jumps256.dat");
@@ -475,8 +477,8 @@ int go(int id)
 		config.pbcz=true;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=16;
 		config.nrlayers=2;
 		do_batch(&config, "jumps16_pbcz.dat");
@@ -486,8 +488,8 @@ int go(int id)
 		config.pbcz=true;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=32;
 		config.nrlayers=2;
 		do_batch(&config, "jumps32_pbcz.dat");
@@ -497,8 +499,8 @@ int go(int id)
 		config.pbcz=true;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=64;
 		config.nrlayers=2;
 		do_batch(&config, "jumps64_pbcz.dat");
@@ -508,8 +510,8 @@ int go(int id)
 		config.pbcz=true;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=128;
 		config.nrlayers=2;
 		do_batch(&config, "jumps128_pbcz.dat");
@@ -519,47 +521,77 @@ int go(int id)
 		config.pbcz=true;
 		config.measure_jumps=true;
 		config.total_runs=1000;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
 		config.xdim=config.ydim=256;
 		config.nrlayers=2;
 		do_batch(&config, "jumps256_pbcz.dat");
 		break;
 
-		case 101:
+		case 40:
 		config.pbcz=false;
-		config.measure_jumps=true;
-		config.mincentip=26;
-		config.maxcentip=26;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
-		config.xdim=config.ydim=16;
+		config.total_runs=10000;
+		config.minmillipperp=250;
+		config.maxmillipperp=250;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
 		config.nrlayers=2;
-		do_batch(&config, "jumps16debug.dat");
+		do_batch(&config, "bilayer512p25.dat");
 		break;
 
-		case 102:
+		case 41:
 		config.pbcz=false;
-		config.mincentip=57;
-		config.maxcentip=57;
-		config.mincentipperp=3;
-		config.maxcentipperp=3;
-		config.xdim=config.ydim=16;
+		config.total_runs=10000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
 		config.nrlayers=2;
-		do_batch(&config, "bilayer16.dat");
+		do_batch(&config, "bilayer512p50.dat");
 		break;
 
-		case 139:
+		case 42:
 		config.pbcz=false;
-		config.measure_jumps=true;
-		config.total_runs=1000;
-		config.mincentip=28;
-		config.maxcentip=50;
-		config.mincentipperp=50;
-		config.maxcentipperp=50;
-		config.xdim=config.ydim=256;
+		config.total_runs=10000;
+		config.minmillipperp=750;
+		config.maxmillipperp=750;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
 		config.nrlayers=2;
-		do_batch(&config, "jumps256.dat");
+		do_batch(&config, "bilayer512p75.dat");
+		break;
+
+		case 43:
+		config.pbcz=true;
+		config.total_runs=20000;
+		config.minmillipperp=250;
+		config.maxmillipperp=250;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
+		config.nrlayers=2;
+		do_batch(&config, "bilayer512p25_pbcz.dat");
+		break;
+
+		case 44:
+		config.pbcz=true;
+		config.total_runs=20000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
+		config.nrlayers=2;
+		do_batch(&config, "bilayer512p50_pbcz.dat");
+		break;
+
+		case 45:
+		config.pbcz=true;
+		config.total_runs=20000;
+		config.minmillipperp=750;
+		config.maxmillipperp=750;
+		config.incmillip=1;
+		config.xdim=config.ydim=512;
+		config.nrlayers=2;
+		do_batch(&config, "bilayer512p75_pbcz.dat");
 		break;
 
 		default:
