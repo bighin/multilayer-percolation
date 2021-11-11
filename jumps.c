@@ -26,6 +26,13 @@ void gsl_matrix_int_print(gsl_matrix_int *m)
 	}
 }
 
+/*
+	This is a just a thin wrapper around the standard GSL sparse matrix.
+
+	The reason is that in GSL the default value for element which haven't
+	been set yet is 0, whereas here we want INT_MAX as default value.
+*/
+
 struct adjacency_t
 {
 	gsl_spmatrix_int *m;
@@ -49,8 +56,8 @@ void fini_adjacency(struct adjacency_t *adj)
 
 void adjacency_set(struct adjacency_t *adj, int i, int j, int weight)
 {
-	if(weight==0)
-		gsl_spmatrix_int_set(adj->m,i,j,INT_MAX);
+	if(weight==INT_MAX)
+		return;
 
 	gsl_spmatrix_int_set(adj->m,i,j,1+weight);
 }
