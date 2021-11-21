@@ -177,19 +177,8 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,stru
 						neighbours[1]=nclusters_get_value(nclusters,x,y-1,l);
 
 				if(l!=0)
-				{
 					if(ivbond2d_get_value(nclusters->ivbonds[l-1], x, y)==1)
 						neighbours[2]=nclusters_get_value(nclusters, x, y, l-1);
-				}
-				else if(pbcz==true)
-				{
-					/*
-						Implementing periodic boundary conditions along the z-axis
-					*/
-
-					if(ivbond2d_get_value(nclusters->ivbonds[nclusters->nrlayers-1], x, y)==1)
-						neighbours[2]=nclusters_get_value(nclusters, x, y, nclusters->nrlayers-1);
-				}
 
 				int nr_of_neighbours=count_non_zeroes(neighbours, NR_OF_NEIGHBOURS);
 
@@ -215,6 +204,12 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,stru
 			}
 		}
 	}
+
+	if(pbcz==true)
+		for(int x=0;x<nclusters->lx;x++)
+			for(int y=0;y<nclusters->ly;y++)
+				if(ivbond2d_get_value(nclusters->ivbonds[nclusters->nrlayers-1], x, y)==1)
+					hk_union(labels,nclusters_get_value(nclusters,x,y,0),nclusters_get_value(nclusters,x,y,nclusters->nrlayers-1));
 
 	/*
 		Normalization and collection of statistics about the clusters.

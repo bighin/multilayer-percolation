@@ -552,6 +552,7 @@ int go(int id)
 
 		case 42:
 		config.pbcz=false;
+		config.verbose=true;
 		config.total_runs=10000;
 		config.minmillipperp=750;
 		config.maxmillipperp=750;
@@ -592,6 +593,28 @@ int go(int id)
 		config.xdim=config.ydim=512;
 		config.nrlayers=2;
 		do_batch(&config, "bilayer512p75_pbcz.dat");
+		break;
+
+		case 50:
+		config.pbcz=false;
+		config.total_runs=10000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.incmillip=1;
+		config.xdim=config.ydim=256;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer256p50.dat");
+		break;
+
+		case 51:
+		config.pbcz=true;
+		config.total_runs=10000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.incmillip=1;
+		config.xdim=config.ydim=256;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer256p50_pbcz.dat");
 		break;
 
 		default:
