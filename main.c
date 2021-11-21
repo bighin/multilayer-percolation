@@ -617,6 +617,104 @@ int go(int id)
 		do_batch(&config, "trilayer256p50_pbcz.dat");
 		break;
 
+		case 201:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=2;
+		do_batch(&config, "l2_256_pbcz.dat");
+		break;
+
+		case 202:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=3;
+		do_batch(&config, "l3_256_pbcz.dat");
+		break;
+
+		case 203:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=4;
+		do_batch(&config, "l4_256_pbcz.dat");
+		break;
+
+		case 204:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=5;
+		do_batch(&config, "l5_256_pbcz.dat");
+		break;
+
+		case 205:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=6;
+		do_batch(&config, "l6_256_pbcz.dat");
+		break;
+
+		case 206:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=7;
+		do_batch(&config, "l7_256_pbcz.dat");
+		break;
+
+		case 207:
+		config.pbcz=false;
+		config.xdim=config.ydim=256;
+		config.nrlayers=8;
+		do_batch(&config, "l8_256_pbcz.dat");
+		break;
+
+		case 208:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=2;
+		do_batch(&config, "l2_256_pbcz.dat");
+		break;
+
+		case 209:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=3;
+		do_batch(&config, "l3_256_pbcz.dat");
+		break;
+
+		case 210:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=4;
+		do_batch(&config, "l4_256_pbcz.dat");
+		break;
+
+		case 211:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=5;
+		do_batch(&config, "l5_256_pbcz.dat");
+		break;
+
+		case 212:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=6;
+		do_batch(&config, "l6_256_pbcz.dat");
+		break;
+
+		case 213:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=7;
+		do_batch(&config, "l7_256_pbcz.dat");
+		break;
+
+		case 214:
+		config.pbcz=true;
+		config.xdim=config.ydim=256;
+		config.nrlayers=8;
+		do_batch(&config, "l8_256_pbcz.dat");
+		break;
+
 		default:
 		break;
 	}
