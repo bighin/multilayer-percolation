@@ -621,49 +621,49 @@ int go(int id)
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=2;
-		do_batch(&config, "l2_256_pbcz.dat");
+		do_batch(&config, "l2_256.dat");
 		break;
 
 		case 202:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=3;
-		do_batch(&config, "l3_256_pbcz.dat");
+		do_batch(&config, "l3_256.dat");
 		break;
 
 		case 203:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=4;
-		do_batch(&config, "l4_256_pbcz.dat");
+		do_batch(&config, "l4_256.dat");
 		break;
 
 		case 204:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=5;
-		do_batch(&config, "l5_256_pbcz.dat");
+		do_batch(&config, "l5_256.dat");
 		break;
 
 		case 205:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=6;
-		do_batch(&config, "l6_256_pbcz.dat");
+		do_batch(&config, "l6_256.dat");
 		break;
 
 		case 206:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=7;
-		do_batch(&config, "l7_256_pbcz.dat");
+		do_batch(&config, "l7_256.dat");
 		break;
 
 		case 207:
 		config.pbcz=false;
 		config.xdim=config.ydim=256;
 		config.nrlayers=8;
-		do_batch(&config, "l8_256_pbcz.dat");
+		do_batch(&config, "l8_256.dat");
 		break;
 
 		case 208:
@@ -713,6 +713,116 @@ int go(int id)
 		config.xdim=config.ydim=256;
 		config.nrlayers=8;
 		do_batch(&config, "l8_256_pbcz.dat");
+		break;
+
+		case 218:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=16;
+		config.nrlayers=2;
+		do_batch(&config, "jumps16.dat");
+		break;
+
+		case 219:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=32;
+		config.nrlayers=2;
+		do_batch(&config, "jumps32.dat");
+		break;
+
+		case 220:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=64;
+		config.nrlayers=2;
+		do_batch(&config, "jumps64.dat");
+		break;
+
+		case 221:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=128;
+		config.nrlayers=2;
+		do_batch(&config, "jumps128.dat");
+		break;
+
+		case 222:
+		config.pbcz=false;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=256;
+		config.nrlayers=2;
+		do_batch(&config, "jumps256.dat");
+		break;
+
+		case 223:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=16;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps16_pbcz.dat");
+		break;
+
+		case 224:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=32;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps32_pbcz.dat");
+		break;
+
+		case 225:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=64;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps64_pbcz.dat");
+		break;
+
+		case 226:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=128;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps128_pbcz.dat");
+		break;
+
+		case 227:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=1000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=256;
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps256_pbcz.dat");
 		break;
 
 		default:
