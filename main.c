@@ -722,8 +722,8 @@ int go(int id)
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=16;
-		config.nrlayers=2;
-		do_batch(&config, "jumps16.dat");
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps16.dat");
 		break;
 
 		case 219:
@@ -733,8 +733,8 @@ int go(int id)
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=32;
-		config.nrlayers=2;
-		do_batch(&config, "jumps32.dat");
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps32.dat");
 		break;
 
 		case 220:
@@ -744,8 +744,8 @@ int go(int id)
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=64;
-		config.nrlayers=2;
-		do_batch(&config, "jumps64.dat");
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps64.dat");
 		break;
 
 		case 221:
@@ -755,8 +755,8 @@ int go(int id)
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=128;
-		config.nrlayers=2;
-		do_batch(&config, "jumps128.dat");
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps128.dat");
 		break;
 
 		case 222:
@@ -766,8 +766,8 @@ int go(int id)
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=256;
-		config.nrlayers=2;
-		do_batch(&config, "jumps256.dat");
+		config.nrlayers=3;
+		do_batch(&config, "trilayer_jumps256.dat");
 		break;
 
 		case 223:
