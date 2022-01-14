@@ -35,6 +35,8 @@ struct statistics_t
 
 	int nr_percolating1;
 	int nr_percolating2;
+
+	int pbins[MAX_NR_OF_LAYERS*MAX_NR_OF_LAYERS];
 };
 
 int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,struct statistics_t *stat,int seq,const gsl_rng *rngctx,bool pbcz);

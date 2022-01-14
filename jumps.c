@@ -295,7 +295,125 @@ void process_neighbours(struct nclusters_t *vertices, struct adjacency_t *adj, i
 	}
 }
 
-int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz)
+/*
+	A struct and some functions used to find out how many of the sites
+	in the percolating cluster belong to each layer.
+*/
+
+struct layer_info_t
+{
+	int id;
+	int bin;
+};
+
+int compar_layer_info(const void *p, const void *q)
+{
+	int bin1=((struct layer_info_t *)(p))->bin;
+	int bin2=((struct layer_info_t *)(q))->bin;
+
+	return (bin1 - bin2);
+}
+
+/*
+	From Rosetta Code (http://rosettacode.org/wiki/Permutations/Rank_of_a_permutation#C:_Myrvold_and_Ruskey)
+	some functions to determine the rank of a permutation
+*/
+
+#define SWAP(a,b) do{t=(a);(a)=(b);(b)=t;}while(0)
+
+int mr_rank1(int n, int *vec, int *inv)
+{
+	int s, t;
+
+	if (n < 2)
+		return 0;
+
+	s = vec[n-1];
+	SWAP(vec[n-1], vec[inv[n-1]]);
+	SWAP(inv[s], inv[n-1]);
+
+	return s + n*mr_rank1(n-1, vec, inv);
+}
+
+int permutation_to_rank(int n, const int *vec)
+{
+	int i, r, *v, *inv;
+
+	v = malloc(n * sizeof(int));
+	inv = malloc(n * sizeof(int));
+
+	for (i = 0; i < n; i++)
+	{
+		v[i] = vec[i];
+		inv[vec[i]] = i;
+	}
+
+	r=mr_rank1(n, v, inv);
+
+	free(inv);
+	free(v);
+
+	return r;
+}
+int get_permutation_bin(int nrlayers,const int bins[MAX_NR_OF_LAYERS])
+{
+#if 0
+		/*
+			Is this preliminary "rotation" needed?
+		*/
+
+		int bins2[MAX_NR_OF_LAYERS];
+		int seed=gsl_rng_uniform_int(rngctx, nclusters->nrlayers);
+
+		for(int c=0;c<nclusters->nrlayers;c++)
+			bins2[c]=bins[(c+seed)%nclusters->nrlayers];
+
+		for(int c=0;c<nclusters->nrlayers;c++)
+			bins[c]=bins2[c];
+#endif
+	/*
+		Actual algorithm: we sort the layers from the one with the most sites
+		belong to the percolating clusters, to the one with the least.
+	*/
+
+	struct layer_info_t layer_infos[MAX_NR_OF_LAYERS];
+
+	for(int c=0;c<nrlayers;c++)
+	{
+		layer_infos[c].id=c;
+		layer_infos[c].bin=bins[c];
+	}
+
+	qsort(layer_infos, nrlayers, sizeof(struct layer_info_t), compar_layer_info);
+
+	/*
+		Then we identify the corresponding permutation
+	*/
+
+#if 0
+	for(int c=0;c<nclusters->nrlayers;c++)
+	{
+		printf("%d[%d] ", layer_infos[c].id, layer_infos[c].bin);
+	}
+#endif
+
+	int *ps=malloc(sizeof(int)*nrlayers);
+
+	for(int c=0;c<nrlayers;c++)
+		ps[c]=layer_infos[c].id;
+
+	int permutation_rank=permutation_to_rank(nrlayers,ps);
+
+	if(ps)
+		free(ps);
+#if 0
+	printf(" --> %d \n",permutation_rank);
+#endif
+
+	return permutation_rank;
+}
+
+int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz,int *pbins)
 {
 	assert(nclusters!=NULL);
 	assert(id!=0);
@@ -324,6 +442,8 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 	struct nclusters_t *vertices=nclusters_init(nclusters->lx,nclusters->ly,nclusters->nrlayers);
 	assert(vertices!=NULL);
 
+	int bins[MAX_NR_OF_LAYERS]={0};
+
 	for(int x=0;x<nclusters->lx;x++)
 		for(int y=0;y<nclusters->ly;y++)
 			for(int l=0;l<nclusters->nrlayers;l++)
@@ -348,6 +468,7 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 						new_vertex_id=nr_vertices++;
 
 					nclusters_set_value(vertices, x, y, l, new_vertex_id);
+					bins[l]++;
 				}
 				else
 				{
@@ -390,10 +511,12 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 		One could avoid the adjacency matrix, and calculate the weights
 		on the flight in dijkstra_distance(), maybe...
 
-		I am not sure how faster this would be...
+		I am not sure how much faster this would be...
 	*/
 
 	int jumps=dijkstra_distance(adj, 0, 1);
+
+	pbins[get_permutation_bin(nclusters->nrlayers,bins)]++;
 
 	/*
 		Finally, we free the vertices structure along with graph adjacency matrix
