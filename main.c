@@ -71,6 +71,11 @@ void reset_stats(struct statistics_t *st)
 	{
 		st->pbins[c]=0;
 	}
+
+	for(int c=0;c<MAX_NR_OF_LAYERS;c++)
+	{
+		st->ns[c]=0;
+	}
 }
 
 void add_stats(struct statistics_t *total,struct statistics_t *st)
@@ -94,6 +99,11 @@ void add_stats(struct statistics_t *total,struct statistics_t *st)
 	for(int c=0;c<MAX_NR_OF_LAYERS*MAX_NR_OF_LAYERS;c++)
 	{
 		total->pbins[c]+=st->pbins[c];
+	}
+
+	for(int c=0;c<MAX_NR_OF_LAYERS;c++)
+	{
+		total->ns[c]+=st->ns[c];
 	}
 }
 
@@ -215,11 +225,12 @@ int ifactorial(int n)
 
 void do_batch(struct config_t *config,char *prefix)
 {
-	char outfile[1024],outfile2[1024];
-	FILE *out,*out2;
+	char outfile[1024],outfile2[1024],outfile3[1024];
+	FILE *out,*out2,*out3;
 
 	snprintf(outfile,1024,"%s.dat",prefix);
 	snprintf(outfile2,1024,"%s.bins.dat",prefix);
+	snprintf(outfile3,1024,"%s.ns.dat",prefix);
 
 	out=fopen(outfile,"w+");
 	assert(out);
@@ -231,11 +242,15 @@ void do_batch(struct config_t *config,char *prefix)
 		out2=fopen(outfile2, "w+");
 		assert(out2);
 
+		out3=fopen(outfile3, "w+");
+		assert(out3);
+
 		setvbuf(out2, (char *)(NULL), _IONBF, 0);
+		setvbuf(out3, (char *)(NULL), _IONBF, 0);
 	}
 
 #ifdef NDEBUG
-#pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,out2,stderr,gsl_rng_mt19937)
+#pragma omp parallel for collapse(2) schedule(dynamic) default(none) shared(config,out,out2,out3,stderr,gsl_rng_mt19937)
 #endif
 
 	for(int millipperp=config->minmillipperp;millipperp<=config->maxmillipperp;millipperp+=config->incmillipperp)
@@ -326,6 +341,13 @@ void do_batch(struct config_t *config,char *prefix)
 						fprintf(out2, "%d ", total.pbins[c]);
 
 					fprintf(out2, "\n");
+
+					fprintf(out3, "%f %f ", p, pperp);
+
+					for(int c=0;c<config->nrlayers;c++)
+						fprintf(out2, "%d ", total.ns[c]);
+
+					fprintf(out3, "\n");
 				}
 			}
 		}
@@ -334,8 +356,14 @@ void do_batch(struct config_t *config,char *prefix)
 	if(out)
 		fclose(out);
 
-	if((config->measure_jumps==true)&&(out2))
-		fclose(out2);
+	if(config->measure_jumps==true)
+	{
+		if(out2)
+			fclose(out2);
+
+		if(out3)
+			fclose(out3);
+	}
 }
 
 int go(int id)
@@ -880,12 +908,45 @@ int go(int id)
 		case 900:
 		config.pbcz=true;
 		config.measure_jumps=true;
-		config.total_runs=5000;
+		config.total_runs=50000;
 		config.minmillipperp=500;
 		config.maxmillipperp=500;
 		config.xdim=config.ydim=32;
 		config.nrlayers=5;
 		do_batch(&config, "l5_256_test2");
+		break;
+
+		case 903:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=50000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=32;
+		config.nrlayers=5;
+		do_batch(&config, "l3_256_test9");
+		break;
+
+		case 904:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=50000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=32;
+		config.nrlayers=5;
+		do_batch(&config, "l4_256_test9");
+		break;
+
+		case 905:
+		config.pbcz=true;
+		config.measure_jumps=true;
+		config.total_runs=50000;
+		config.minmillipperp=500;
+		config.maxmillipperp=500;
+		config.xdim=config.ydim=32;
+		config.nrlayers=5;
+		do_batch(&config, "l5_256_test9");
 		break;
 
 		default:

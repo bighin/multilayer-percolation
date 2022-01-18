@@ -315,7 +315,7 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,stru
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz, stat->pbins);
+					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_X, pbcz, stat->pbins, stat->ns);
 			}
 
 			if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)
@@ -358,7 +358,7 @@ int nclusters_identify_percolation(struct nclusters_t *nclusters,int *jumps,stru
 				first_has_been_found=true;
 
 				if(jumps!=NULL)
-					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_Y, pbcz, stat->pbins);
+					*jumps=ncluster_evaluate_jumps(nclusters, thisid, DIR_Y, pbcz, stat->pbins, stat->ns);
 			}
 
 			if(nclusters_get_value(nclusters, rx, ry, rl)==thisid)

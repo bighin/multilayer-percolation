@@ -355,6 +355,7 @@ int permutation_to_rank(int n, const int *vec)
 
 	return r;
 }
+
 int get_permutation_bin(int nrlayers,const int bins[MAX_NR_OF_LAYERS])
 {
 #if 0
@@ -413,7 +414,30 @@ int get_permutation_bin(int nrlayers,const int bins[MAX_NR_OF_LAYERS])
 	return permutation_rank;
 }
 
-int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz,int *pbins)
+void fill_ns_bins(int nrlayers,const int bins[MAX_NR_OF_LAYERS],int *ns)
+{
+	/*
+		Actual algorithm: we sort the layers from the one with the most sites
+		belong to the percolating clusters, to the one with the least.
+	*/
+
+	struct layer_info_t layer_infos[MAX_NR_OF_LAYERS];
+
+	for(int c=0;c<nrlayers;c++)
+	{
+		layer_infos[c].id=c;
+		layer_infos[c].bin=bins[c];
+	}
+
+	qsort(layer_infos, nrlayers, sizeof(struct layer_info_t), compar_layer_info);
+
+	for(int c=0;c<nrlayers;c++)
+	{
+		ns[c]+=layer_infos[c].bin;
+	}
+}
+
+int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bool pbcz,int *pbins,int *ns)
 {
 	assert(nclusters!=NULL);
 	assert(id!=0);
@@ -517,6 +541,7 @@ int ncluster_evaluate_jumps(struct nclusters_t *nclusters,int id,int spanning,bo
 	int jumps=dijkstra_distance(adj, 0, 1);
 
 	pbins[get_permutation_bin(nclusters->nrlayers,bins)]++;
+	fill_ns_bins(nclusters->nrlayers,bins,ns);
 
 	/*
 		Finally, we free the vertices structure along with graph adjacency matrix
