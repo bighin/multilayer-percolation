@@ -345,7 +345,7 @@ void do_batch(struct config_t *config,char *prefix)
 					fprintf(out3, "%f %f ", p, pperp);
 
 					for(int c=0;c<config->nrlayers;c++)
-						fprintf(out2, "%d ", total.ns[c]);
+						fprintf(out3, "%d ", total.ns[c]);
 
 					fprintf(out3, "\n");
 				}
