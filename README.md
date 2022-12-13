@@ -1,5 +1,7 @@
 # Monte Carlo simulation of percolation in multilayer systems
 
+This code studies bond percolation in bilayer and generic multilayer systems by means of Monte Carlo simulation. The aim is studying the phase diagram a function of p -- the probability of activating an in-plane bond -- and p_perp -- the probability of activating a link between 
+
 # Requirements
 
 A modern C compiler (GCC or Clang) and the following libraries:
